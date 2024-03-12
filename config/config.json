@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "carouselbanner-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/carouselbanner/CarouselbannerWebPart.js",
+          "manifest": "./src/webparts/carouselbanner/CarouselbannerWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "CarouselbannerWebPartStrings": "lib/webparts/carouselbanner/loc/{locale}.js"
+  }
+}
