@@ -120,7 +120,7 @@
   background: linear-gradient(243.55deg, #335CCC -1.19%, rgba(217, 217, 217, 0) 85.83%);
   opacity: 15%;
   rotate: -85deg;
-  left:410px;
+  left:800px;
   top:-320px;
   border-radius: 33px;
   position: absolute;
@@ -155,16 +155,17 @@ border-radius: 6px;
 background: #FFFFFF7D;
 box-shadow: 3px 0px 8.399999618530273px 0px #80808040;
 // flex-basis: 45%;
-flex-basis: 31%;
-
-margin-bottom: 18px;
+flex-basis: 35%;
+margin-bottom: 13px;
 }
 
 .cardContainer {
   display: flex;
   flex-wrap: wrap;
-  gap:4%;
-  // justify-content: space-between;
+  gap:3%;
+  justify-content: flex-start;
+  margin-left: 67px;
+  width: 100%;
 }
 
 
@@ -211,8 +212,7 @@ margin-bottom: 18px;
 .prevArrow{
   position: absolute;
   // left: 747px;
-  left: 1128px;
-
+  left: 1130px;
   top: 165px;
   background: transparent !important;
   z-index: 10;
@@ -224,7 +224,7 @@ margin-bottom: 18px;
 .Imageedit{
   width:40px;
   height:40px;
-  margin-left: 50px;
+  margin-left: 51px;
   margin-top: 16px;
 }
 .cardText{

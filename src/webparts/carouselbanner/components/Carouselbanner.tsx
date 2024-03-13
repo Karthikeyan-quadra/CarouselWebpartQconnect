@@ -41,6 +41,8 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const allowedFileTypes = ['image/svg+xml', 'image/png']; // Define allowed file types
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+
 
   // const [selectedSlideData, setSelectedSlideData] = useState<Item[]>([]);
 
@@ -51,6 +53,8 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
   const edit = (record: Item) => {
     setEditingKey(record.key);
+    setEditingItem(record);
+
   };
 
 
@@ -219,7 +223,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
          
            // Set the initial value from the record
           >
-            <Input value={record.Title} />
+            <Input defaultValue={editingItem?.Title} />
           </Form.Item>
         ) : (
           <span>{record.Title}</span>
@@ -239,7 +243,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
         return editable ? (
           <Form.Item name="URL" style={{ margin: 0, width:"250px" }}>
-            <Input />
+            <Input defaultValue={editingItem?.URL}/>
           </Form.Item>
         ) : (
           <span>{record.URL}</span>
@@ -439,9 +443,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   width: 46px;
 }
 
-:where(.css-1uweeqc).ant-carousel .slick-dots li.slick-active {
-  width: 46px;
-}
+
 
 .ant-carousel .slick-dots li button {
   position: relative;
@@ -560,6 +562,11 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   //     console.error("Error editing item:", error);
   //   }
   // };
+
+
+  // :where(.css-1uweeqc).ant-carousel .slick-dots li.slick-active {
+  //   width: 46px;
+  // }
 
 
   // const handleEdit = async (item: any) => {
@@ -682,7 +689,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
         {fetchedData.length ? (
           <Fragment >
 
-            <button onClick={() => slider.current.prev()} className={styles.nextArrow}>{`<`}</button>
+            <Button onClick={() => slider.current.prev()} className={styles.nextArrow}>{`<`}</Button>
 
             <Carousel ref={slider} dots={true} afterChange={handleSlideChange}>
 
@@ -694,12 +701,12 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                   >
                     <div style={{ flexBasis: "2%" }}>
 
-                      <button onClick={() => onClickEditButton(chunkIndex)}>
+                      <Button onClick={() => onClickEditButton(chunkIndex)}>
                         <img
                           src={require("../assets/Edit.svg")}
                           alt="Edit button"
                         />
-                      </button>
+                      </Button>
                       <Drawer title="Add content" onClose={onClose} open={open} width={1000}>
                         <div>
                           <Form onFinish={handleAddData} form={form}>
@@ -742,7 +749,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                             <Form.Item>
 
 
-                              <Button type="primary" htmlType="submit" style={{ marginLeft: "51px" }}>Add</Button>
+                              <Button type="primary" htmlType="submit" style={{ marginLeft: "52px" }}>Add</Button>
                             </Form.Item>
 
                           </Form>
@@ -813,7 +820,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                 </div>
               ))}
             </Carousel>
-            <button onClick={() => slider.current.next()} className={styles.prevArrow}>{`>`}</button>
+            <Button onClick={() => slider.current.next()} className={styles.prevArrow}>{`>`}</Button>
           </Fragment >
 
         ) : (
@@ -906,7 +913,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 <Form.Item>
 
 
-  <Button type="primary" htmlType="submit" style={{ marginLeft: "42px" }}>Add</Button>
+  <Button type="primary" htmlType="submit" style={{ marginLeft: "52px" }}>Add</Button>
 </Form.Item>
 
 </Form>
