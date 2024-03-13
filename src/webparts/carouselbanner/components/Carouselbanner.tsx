@@ -34,9 +34,15 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   const [open, setOpen] = useState(false);
   const [editingKey, setEditingKey] = useState<string | number>("");
   // const [editingRow, setEditingRow] = useState<string | number>("");
-  // const [form] = Form.useForm();
+  const [form] = Form.useForm();
   const [editForm] = Form.useForm(); // Create a separate form for editing
   const fileInputRef = useRef<any>(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0); // Track the currently active slide index
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const allowedFileTypes = ['image/svg+xml', 'image/png']; // Define allowed file types
+
+  // const [selectedSlideData, setSelectedSlideData] = useState<Item[]>([]);
 
 
 
@@ -48,7 +54,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   };
 
 
-  
+
 
   const cancel = () => {
     setEditingKey("");
@@ -62,9 +68,15 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   }, [props.context.pageContext.user.email]);
 
 
+  const handleSlideChange = (index: number) => {
+    setActiveSlideIndex(index);
+  };
+
 
   const onClose = () => {
     setOpen(false);
+    setEditingKey(""); // Add this line to reset the editing key
+
   };
 
   type ColumnTypes = any;
@@ -103,27 +115,92 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   //   }
   // };
 
+  // const handleSave = async (record: any) => {
+  //   try {
+  //     const newData = [...fetchedData];
+  //     const index = newData.findIndex((item) => record.ID === item.ID);
+
+  //     if (index > -1) {
+  //       const editedItem = await editForm.validateFields(); // Validate the form fields
+
+  //       // Assuming `record.ID` is the SharePoint item ID
+  //       await EditItem(record.ID, editedItem.Title, editedItem.URL); // Update the SharePoint list
+
+  //       newData.splice(index, 1, { ...record, Title: editedItem.Title, URL: editedItem.URL });
+  //       setFetchedData(newData);
+  //       setEditingKey('');
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving item:", error);
+  //   }
+  // };
+
+  // //previous data showing
+  // const handleSave = async (record: any) => {
+  //   try {
+  //     const newData = [...fetchedData];
+  //     const index = newData.findIndex((item) => record.ID === item.ID);
+
+  //     if (index > -1) {
+  //       const editedItem = await editForm.validateFields(); // Validate the form fields
+
+  //       // Handle file upload if the form field is updated
+  //       if (editedItem.Icon instanceof File) {
+  //         const uploadedFile = editedItem.Icon;
+  //         // Perform any validation or checks on the file before setting it
+  //         console.log('Uploading file:', uploadedFile);
+  //       }
+
+  //       // Assuming `record.ID` is the SharePoint item ID
+  //       await EditItem(record.ID, editedItem.Title, editedItem.URL); // Update the SharePoint list
+
+  //       newData.splice(index, 1, { ...record, Title: editedItem.Title, URL: editedItem.URL });
+  //       setFetchedData(newData);
+  //       setEditingKey('');
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving item:", error);
+  //   }
+  // };
+
   const handleSave = async (record: any) => {
     try {
+
       const newData = [...fetchedData];
       const index = newData.findIndex((item) => record.ID === item.ID);
-  
+
       if (index > -1) {
         const editedItem = await editForm.validateFields(); // Validate the form fields
-  
+          console.log(editedItem);
+          
+        // Handle file upload if a new file is selected
+        if (selectedFile) {
+          // Perform any validation or checks on the file before setting it
+          console.log('Uploading file:', selectedFile);
+          editedItem.Image = selectedFile;
+
+        }
+
         // Assuming `record.ID` is the SharePoint item ID
-        await EditItem(record.ID, editedItem.Title, editedItem.URL); // Update the SharePoint list
-  
+        const response = await EditItem(record.ID, editedItem.Title, editedItem.URL, editedItem.Image); // Update the SharePoint list
+        console.log(response);
+        // await handleFetchData();
+
         newData.splice(index, 1, { ...record, Title: editedItem.Title, URL: editedItem.URL });
         setFetchedData(newData);
         setEditingKey('');
+        setSelectedFile(null); // Clear the selected file after saving
+        await handleFetchData();
+
       }
     } catch (error) {
       console.error("Error saving item:", error);
     }
-  };  
-  
-  
+  };
+
+
+
+
 
   const columns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
     {
@@ -131,12 +208,18 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
       dataIndex: 'Title',
       key: 'Title',
       editable: true,
-      render: (text:string, record:Item) => {
+      width: "20%", // Set the desired width (you can adjust the value)
+
+      render: (text: string, record: Item) => {
         const editable = isEditing(record);
-  
-        return editable  ? (
-          <Form.Item name="Title" style={{ margin: 0 }}>
-            <Input />
+
+        return editable ? (
+          <Form.Item name="Title" style={{ margin: 0, width:"134px" }}
+          // initialValue={record.Title}
+         
+           // Set the initial value from the record
+          >
+            <Input value={record.Title} />
           </Form.Item>
         ) : (
           <span>{record.Title}</span>
@@ -149,11 +232,13 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
       dataIndex: 'URL',
       key: 'URL',
       editable: true,
+      width: "20%", // Set the desired width (you can adjust the value)
+
       render: (text: string, record: Item) => {
         const editable = isEditing(record);
-  
-        return editable  ? (
-          <Form.Item name="URL" style={{ margin: 0 }}>
+
+        return editable ? (
+          <Form.Item name="URL" style={{ margin: 0, width:"250px" }}>
             <Input />
           </Form.Item>
         ) : (
@@ -163,45 +248,70 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
     },
     {
-      title: 'Image',
+      title: 'Icon',
       dataIndex: 'AttachmentFiles',
       key: 'Image',
       editable: true,
-      render: (AttachmentFiles:any, record) => {
+      render: (_: any, record: any) => {
         const editable = isEditing(record);
- 
-        return editable  ? (
-          <Form.Item  label="Icon">
-                              <Upload
-                                customRequest={() => { }}
-                                showUploadList={true}
-                                beforeUpload={(file) => {
-                                  // Perform any validation or checks on the file before setting it
-                                  handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
-                                  return false; // Prevent automatic upload
-                                }}
-                              >
-                                <Button icon={<UploadOutlined rev={undefined} />}>Upload</Button>
-                              </Upload>
-                            </Form.Item>
+
+        return editable ? (
+          // <Form.Item label="Icon">
+          //   <Upload
+          //     customRequest={() => { }}
+          //     showUploadList={true}
+          //     beforeUpload={(file) => {
+          //       // Perform any validation or checks on the file before setting it
+          //       handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
+          //       return false; // Prevent automatic upload
+          //     }}
+          //   >
+          //     <Button icon={<UploadOutlined rev={undefined} />}>Upload</Button>
+          //   </Upload>
+          // </Form.Item>
+
+          // <Form.Item label="Icon" name="Icon"
+          // >
+
+<Form.Item  name="Icon" style={{ margin: 0, marginTop:"1px" }}
+          >
+            <Upload
+              customRequest={() => { }}
+              showUploadList={true}
+              beforeUpload={(file) => {
+
+                const fileType = file.type;
+                if (!allowedFileTypes.includes(fileType)) {
+                  message.error('Invalid file type. Please upload only SVG or PNG files.');
+                  return false; // Prevent automatic upload
+                }
+
+                // Perform any validation or checks on the file before setting it
+                handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
+                return false; // Prevent automatic upload
+              }}
+            >
+              <Button icon={<UploadOutlined rev={undefined} />}>Upload</Button>
+            </Upload>
+          </Form.Item>
         ) : (
-          
+
           <span><img
-          src={record.AttachmentFiles && record.AttachmentFiles.length > 0 ? record.AttachmentFiles[0].ServerRelativePath.DecodedUrl : ''}
-          alt="Image"
-          style={{ maxWidth: '50px', maxHeight: '50px' }}
-        />
-        </span>
+            src={record.AttachmentFiles && record.AttachmentFiles.length > 0 ? record.AttachmentFiles[0].ServerRelativePath.DecodedUrl : ''}
+            alt="Image"
+            style={{ maxWidth: '50px', maxHeight: '50px' }}
+          />
+          </span>
         );
       },
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_:any, record:Item) => {
+      render: (_: any, record: Item) => {
         const isEditingRow = isEditing(record);
-  
-        return isEditingRow  ? (
+
+        return isEditingRow ? (
           <Space size="middle">
             <Button
               type="primary"
@@ -225,7 +335,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
     },
   ];
 
-  
+
 
   const handleAddData = async () => {
     try {
@@ -239,6 +349,11 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
         fileInputRef.current.handleReset();
       }
 
+      form.resetFields();
+      setTitle("");
+      setImage(null);
+      setUrl("");
+
       await handleFetchData();
       message.success("Data added successfully!");
 
@@ -250,6 +365,8 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
     }
   };
+
+
 
 
   const handleFetchData = async () => {
@@ -292,13 +409,13 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   };
 
 
-  const customStyle = `:where(.css-dev-only-do-not-override-1uweeqc).ant-carousel .slick-dots li.slick-active button {
-    // background-color: #ea881a !important;
-    background: #335CCC !important;
-    height: 5px !important;
+  const customStyle = `.ant-carousel .slick-dots li.slick-active button {
+    // background-color: #ea881a;
+    background: #335CCC;
+    height: 5px;
    }
 
-   :where(.css-dev-only-do-not-override-1uweeqc).ant-carousel .slick-dots li {
+   .ant-carousel .slick-dots li {
     position: relative;
     display: inline-block;
     flex: 0 1 auto;
@@ -313,12 +430,12 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
     transition: all 0.3s;
     margin-right: 8px;
 }
-:where(.css-dev-only-do-not-override-1uweeqc).ant-carousel .slick-dots-bottom {
+.ant-carousel .slick-dots-bottom {
   position: relative;
   top: 60px;
 }
 
-:where(.css-dev-only-do-not-override-1uweeqc).ant-carousel .slick-dots li.slick-active {
+.ant-carousel .slick-dots li.slick-active {
   width: 46px;
 }
 
@@ -326,7 +443,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   width: 46px;
 }
 
-:where(.css-dev-only-do-not-override-1uweeqc).ant-carousel .slick-dots li button {
+.ant-carousel .slick-dots li button {
   position: relative;
   display: block;
   width: 46px;
@@ -344,7 +461,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 }
 
 .r1alrhcs {
-  width: 30px !important;
+  width: 30px;
   align-items: center;
   box-sizing: border-box;
   display: inline-flex;
@@ -367,6 +484,14 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   transition-duration: var(--durationFaster);
   transition-property: background, border, color;
   transition-timing-function: var(--curveEasyEase);
+}
+
+.ant-drawer .ant-drawer-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  background: rgb(0 0 0 / 14%);
+  pointer-events: auto;
 }
 `;
   const chunkArray = (array: any[], size: number) => {
@@ -391,27 +516,105 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   //   }
   // };
 
+  // const handleEdit = async (item: any) => {
+  //   // Extract details from the selected item
+  //   const { Title, URL } = item;
+
+  //   // Set the extracted details to the state
+  //   setTitle(Title);
+  //   setUrl(URL);
+
+  //   try {
+
+  //     // Assuming EditItem function needs a unique identifier, update this line accordingly
+  //     await EditItem(item.ID, title, url);
+
+  //     // Refresh data after editing
+  //     handleFetchData();
+
+
+  //   } catch (error) {
+  //     console.error("Error editing item:", error);
+  //   }
+  // };
+
+  // const handleEdit = async (item: any) => {
+  //   // Extract details from the selected item
+  //   const { Title, URL } = item;
+
+  //   // Set the extracted details to the state
+  //   setTitle(Title);
+  //   setUrl(URL);
+
+  //   try {
+  //     // Assuming EditItem function needs a unique identifier, update this line accordingly
+  //     if (image !== null) {
+  //       await EditItem(item.ID, title, url, image);
+
+  //       // Refresh data after editing
+  //       handleFetchData();
+  //     } else {
+  //       console.error('Image is null. Handle this case accordingly.');
+  //     }
+  //   } catch (error) {
+  //     console.error("Error editing item:", error);
+  //   }
+  // };
+
+
+  // const handleEdit = async (item: any) => {
+  //   // Extract details from the selected item
+  //   const { Title, URL } = item;
+  
+  //   // Set the extracted details to the state
+  //   setTitle(Title);
+  //   setUrl(URL);
+
+  //   try {
+  //     // Assuming EditItem function needs a unique identifier, update this line accordingly
+  //     if (selectedFile) {
+  //       await EditItem(item.ID, title, url, selectedFile);
+        
+  //       // Refresh data after editing
+  //       handleFetchData();
+  //     } else {
+  //       console.error('Image is null. Handle this case accordingly.');
+  //     }
+  //   } catch (error) {
+  //     console.error("Error editing item:", error);
+  //   }
+
+  // };
+  
+
   const handleEdit = async (item: any) => {
     // Extract details from the selected item
-    const { Title, URL} = item;
-
+    const { Title, URL, AttachmentFiles } = item;
+  
     // Set the extracted details to the state
     setTitle(Title);
     setUrl(URL);
-
+  
     try {
-      
       // Assuming EditItem function needs a unique identifier, update this line accordingly
-      await EditItem(item.ID, title, url);
-
+      if (AttachmentFiles.length > 0) {
+        // Assuming that the image file is present in the AttachmentFiles array
+        const selectedFile = AttachmentFiles[0];
+        setSelectedFile(selectedFile);
+      } else {
+        setSelectedFile(null); // Clear selected file if no image is present
+      }
+  
+      // Update the form with the selected item details
+      editForm.setFieldsValue({ Title, URL });
+  
       // Refresh data after editing
       handleFetchData();
-
-  
     } catch (error) {
       console.error("Error editing item:", error);
     }
   };
+  
 
 
   const handleDelete = async (item: any) => {
@@ -438,10 +641,33 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
 
 
+  // const handleFileChange = (e) => {
+  //   const selectedFile = e.target.files?.[0] || null;
+  //   console.log('Selected File:', selectedFile);
+  //   editForm.setFieldsValue({ Icon: selectedFile }); // Update form field value
+  //   // setImage(selectedFile);
+  // };
+
+
+  //Previous data shown
+  // const handleFileChange = (e) => {
+  //   const selectedFile = e.target.files?.[0] || null;
+  //   console.log('Selected File:', selectedFile);
+
+  //   if (selectedFile) {
+  //     editForm.setFieldsValue({ Icon: selectedFile }); // Update form field value
+  //     console.log('Form field updated:', selectedFile);
+  //   } else {
+  //     console.error('No file selected.');
+  //   }
+
+  // };
+
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files?.[0] || null;
-    console.log('Selected File:', selectedFile);
-    setImage(selectedFile);
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+    setImage(file);
+
 
   };
 
@@ -456,9 +682,10 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
         {fetchedData.length ? (
           <Fragment >
 
-            <Button onClick={() => slider.current.prev()} className={styles.nextArrow}>{`<`}</Button>
+            <button onClick={() => slider.current.prev()} className={styles.nextArrow}>{`<`}</button>
 
-            <Carousel autoplay  autoplaySpeed={5000} ref={slider} dots={true}>
+            <Carousel ref={slider} dots={true} afterChange={handleSlideChange}>
+
               {chunkArray(fetchedData, chunkSize).map((chunk: any[], chunkIndex: number) => (
                 <div key={chunkIndex} className={styles.textStyle}>
 
@@ -467,34 +694,43 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                   >
                     <div style={{ flexBasis: "2%" }}>
 
-                      <Button onClick={() => onClickEditButton(chunkIndex)}>
+                      <button onClick={() => onClickEditButton(chunkIndex)}>
                         <img
                           src={require("../assets/Edit.svg")}
                           alt="Edit button"
                         />
-                      </Button>
-                      <Drawer title="Add content" onClose={onClose} open={open} width={700}>
+                      </button>
+                      <Drawer title="Add content" onClose={onClose} open={open} width={1000}>
                         <div>
-                          <Form onFinish={handleAddData}>
+                          <Form onFinish={handleAddData} form={form}>
 
 
 
-                            <Form.Item label="Title">
+                            <Form.Item label="Title" name="Title" rules={[{ required: true, message: 'Please input your Title!' }]} >
                               <Input value={title} onChange={(e) => setTitle(e.target.value)} />
                             </Form.Item>
 
 
 
-                            <Form.Item label="URL">
+                            <Form.Item label="URL" name="URL" rules={[{ required: true, message: 'Please input your URL!' }]}
+                            >
                               <Input value={url} onChange={(e) => setUrl(e.target.value)} />
                             </Form.Item>
 
 
-                            <Form.Item label="Icon">
+                            <Form.Item label="Icon" name="Icon" rules={[{ required: true, message: 'Please input your Icon!' }]}
+                            >
                               <Upload
                                 customRequest={() => { }}
                                 showUploadList={true}
                                 beforeUpload={(file) => {
+
+                                  const fileType = file.type;
+                                  if (!allowedFileTypes.includes(fileType)) {
+                                    message.error('Invalid file type. Please upload only SVG or PNG files.');
+                                    return false; // Prevent automatic upload
+                                  }
+
                                   // Perform any validation or checks on the file before setting it
                                   handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
                                   return false; // Prevent automatic upload
@@ -506,32 +742,37 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                             <Form.Item>
 
 
-                              <Button type="primary" htmlType="submit" style={{ marginLeft: "42px" }}>Add</Button>
+                              <Button type="primary" htmlType="submit" style={{ marginLeft: "51px" }}>Add</Button>
                             </Form.Item>
 
                           </Form>
                         </div>
 
                         <div>
-                          <h4 className={styles.ManageText}>Add content</h4>
+                          <h4 className={styles.ManageText}>Manage content</h4>
                           <Form form={editForm} component={false}>
-                          <Table columns={columns} pagination={false} dataSource={fetchedData} rowKey="key">
-                            {fetchedData.map((item: any, index: number) => (
-                              <div key={index}>
-                                <span>{item.Title}</span>
-                                <span>{item.URL}</span>
-                                {item.AttachmentFiles.map((attachment: any, attachmentIndex: number) => (
-                                  <span key={attachmentIndex}>
-                                    <img src={attachment.ServerRelativePath.DecodedUrl} alt={item.Title} className={styles.Imageedit} style={{ paddingRight: "20px" }} />
-                                  </span>
-                                ))}
-                                <Button onClick={() => handleEdit(item)}>Edit</Button>
-                                <Button onClick={() => handleDelete(item)}>Delete</Button>
-                              </div>
-                            ))}
-                              
-                      <Button type="primary">Submit</Button>
-                          </Table>
+                            <Table
+                              columns={columns}
+                              pagination={false}
+                              dataSource={fetchedData.slice(activeSlideIndex * chunkSize, (activeSlideIndex + 1) * chunkSize)}
+                              rowKey="key"
+                            >
+                              {fetchedData.map((item: any, index: number) => (
+                                <div key={index}>
+                                  <span>{item.Title}</span>
+                                  <span>{item.URL}</span>
+                                  {item.AttachmentFiles.map((attachment: any, attachmentIndex: number) => (
+                                    <span key={attachmentIndex}>
+                                      <img src={attachment.ServerRelativePath.DecodedUrl} alt={item.Title} className={styles.Imageedit} style={{ paddingRight: "20px" }} />
+                                    </span>
+                                  ))}
+                                  <Button onClick={() => handleEdit(item)}>Edit</Button>
+                                  <Button onClick={() => handleDelete(item)}>Delete</Button>
+                                </div>
+                              ))}
+
+                              <Button type="primary">Submit</Button>
+                            </Table>
                           </Form>
                         </div>
 
@@ -572,7 +813,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                 </div>
               ))}
             </Carousel>
-            <Button onClick={() => slider.current.next()} className={styles.prevArrow}>{`>`}</Button>
+            <button onClick={() => slider.current.next()} className={styles.prevArrow}>{`>`}</button>
           </Fragment >
 
         ) : (
@@ -587,45 +828,90 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                 alt="Edit button"
               />
             </Button>
-            <Drawer title="Add content" onClose={onClose} open={open} width={600}>
+            <Drawer title="Add content" onClose={onClose} open={open} width={700}>
               <div>
-              <div>
-                          <Form onFinish={handleAddData}>
+                <div>
+                  {/* <Form onFinish={handleAddData}>
 
 
 
-                            <Form.Item label="Title">
-                              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-                            </Form.Item>
+                    <Form.Item label="Title" name="Title">
+                      <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                    </Form.Item>
 
 
 
-                            <Form.Item label="URL">
-                              <Input value={url} onChange={(e) => setUrl(e.target.value)} />
-                            </Form.Item>
+                    <Form.Item label="URL" name="URL">
+                      <Input value={url} onChange={(e) => setUrl(e.target.value)} />
+                    </Form.Item>
 
 
-                            <Form.Item label="Icon">
-                              <Upload
-                                customRequest={() => { }}
-                                showUploadList={true}
-                                beforeUpload={(file) => {
-                                  // Perform any validation or checks on the file before setting it
-                                  handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
-                                  return false; // Prevent automatic upload
-                                }}
-                              >
-                                <Button icon={<UploadOutlined rev={undefined} />}>Upload</Button>
-                              </Upload>
-                            </Form.Item>
-                           
-                            <Form.Item>
-                              <Button type="primary" htmlType="submit" style={{ marginLeft: "42px" }}>Add</Button>
-                            </Form.Item>
+                    <Form.Item label="Icon" name="Icon">
+                      <Upload
+                        customRequest={() => { }}
+                        showUploadList={true}
+                        beforeUpload={(file) => {
+                          // Perform any validation or checks on the file before setting it
+                          handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
+                          return false; // Prevent automatic upload
+                        }}
+                      >
+                        <Button icon={<UploadOutlined rev={undefined} />}>Upload</Button>
+                      </Upload>
+                    </Form.Item>
 
-                          </Form>
-                        </div>
-                      </div>
+                    <Form.Item>
+                      <Button type="primary" htmlType="submit" style={{ marginLeft: "42px" }}>Add</Button>
+                    </Form.Item>
+
+                  </Form> */}
+
+<Form onFinish={handleAddData} form={form}>
+
+
+
+<Form.Item label="Title" name="Title" rules={[{ required: true, message: 'Please input your Title!' }]} >
+  <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+</Form.Item>
+
+
+
+<Form.Item label="URL" name="URL" rules={[{ required: true, message: 'Please input your URL!' }]}
+>
+  <Input value={url} onChange={(e) => setUrl(e.target.value)} />
+</Form.Item>
+
+
+<Form.Item label="Icon" name="Icon" rules={[{ required: true, message: 'Please input your Icon!' }]}
+>
+  <Upload
+    customRequest={() => { }}
+    showUploadList={true}
+    beforeUpload={(file) => {
+
+      const fileType = file.type;
+      if (!allowedFileTypes.includes(fileType)) {
+        message.error('Invalid file type. Please upload only SVG or PNG files.');
+        return false; // Prevent automatic upload
+      }
+
+      // Perform any validation or checks on the file before setting it
+      handleFileChange({ target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>);
+      return false; // Prevent automatic upload
+    }}
+  >
+    <Button icon={<UploadOutlined rev={undefined} />}>Upload</Button>
+  </Upload>
+</Form.Item>
+<Form.Item>
+
+
+  <Button type="primary" htmlType="submit" style={{ marginLeft: "42px" }}>Add</Button>
+</Form.Item>
+
+</Form>
+                </div>
+              </div>
 
             </Drawer>
             <h1>No Data to show!!</h1>
