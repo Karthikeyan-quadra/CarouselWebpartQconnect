@@ -54,7 +54,12 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   const edit = (record: Item) => {
     setEditingKey(record.key);
     setEditingItem(record);
-
+    editForm.setFieldsValue({
+      Title: record.Title,
+      URL: record.URL,
+      Icon: record.AttachmentFiles,
+      // Add more fields here if needed
+    });
   };
 
 
@@ -223,7 +228,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
          
            // Set the initial value from the record
           >
-            <Input defaultValue={editingItem?.Title} />
+            <Input />
           </Form.Item>
         ) : (
           <span>{record.Title}</span>
@@ -279,7 +284,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
 <Form.Item  name="Icon" style={{ margin: 0, marginTop:"1px" }}
           >
-            <Upload
+            <Upload maxCount={1}
               customRequest={() => { }}
               showUploadList={true}
               beforeUpload={(file) => {
@@ -436,7 +441,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 }
 .ant-carousel .slick-dots-bottom {
   position: relative;
-  top: 60px;
+  top: 14px;
 }
 
 .ant-carousel .slick-dots li.slick-active {
@@ -451,42 +456,17 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   width: 46px;
   height: 5px;
   padding: 0;
-  color: transparent;
+  color: white;
   font-size: 0;
   background: #ffffff;
   border: 0;
   border-radius: 3px;
   outline: none;
   cursor: pointer;
-  opacity: 0.3;
+  opacity: 1;
   transition: all 0.3s;
 }
 
-.r1alrhcs {
-  width: 30px;
-  align-items: center;
-  box-sizing: border-box;
-  display: inline-flex;
-  justify-content: center;
-  text-decoration-line: none;
-  vertical-align: middle;
-  margin: 0px;
-  overflow: hidden;
-  background-color: #3A86FF30;
-  color: var(--colorNeutralForeground1);
-  border: none;
-  font-family: var(--fontFamilyBase);
-  outline-style: none;
-  min-width: 18px;
-  height: 24px;
-  border-radius: var(--borderRadiusMedium);
-  font-size: var(--fontSizeBase300);
-  font-weight: var(--fontWeightSemibold);
-  line-height: var(--lineHeightBase300);
-  transition-duration: var(--durationFaster);
-  transition-property: background, border, color;
-  transition-timing-function: var(--curveEasyEase);
-}
 
 .ant-drawer .ant-drawer-mask {
   position: absolute;
@@ -592,6 +572,32 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   //   }
 
   // };
+
+  //.r1alrhcs {
+    //   width: 30px;
+    //   align-items: center;
+    //   box-sizing: border-box;
+    //   display: inline-flex;
+    //   justify-content: center;
+    //   text-decoration-line: none;
+    //   vertical-align: middle;
+    //   margin: 0px;
+    //   overflow: hidden;
+    //   background-color: #3A86FF30;
+    //   color: var(--colorNeutralForeground1);
+    //   border: none;
+    //   font-family: var(--fontFamilyBase);
+    //   outline-style: none;
+    //   min-width: 18px;
+    //   height: 24px;
+    //   border-radius: var(--borderRadiusMedium);
+    //   font-size: var(--fontSizeBase300);
+    //   font-weight: var(--fontWeightSemibold);
+    //   line-height: var(--lineHeightBase300);
+    //   transition-duration: var(--durationFaster);
+    //   transition-property: background, border, color;
+    //   transition-timing-function: var(--curveEasyEase);
+    // }
   
 
   const handleEdit = async (item: any) => {
@@ -691,7 +697,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
             <Button onClick={() => slider.current.prev()} className={styles.nextArrow}>{`<`}</Button>
 
-            <Carousel ref={slider} dots={true} afterChange={handleSlideChange}>
+            <Carousel ref={slider} dots={true} afterChange={handleSlideChange} autoplay autoplaySpeed={10000}>
 
               {chunkArray(fetchedData, chunkSize).map((chunk: any[], chunkIndex: number) => (
                 <div key={chunkIndex} className={styles.textStyle}>
@@ -701,7 +707,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                   >
                     <div style={{ flexBasis: "2%" }}>
 
-                      <Button onClick={() => onClickEditButton(chunkIndex)}>
+                      <Button onClick={() => onClickEditButton(chunkIndex)} className={styles.Editbutton}>
                         <img
                           src={require("../assets/Edit.svg")}
                           alt="Edit button"
@@ -727,7 +733,8 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
                             <Form.Item label="Icon" name="Icon" rules={[{ required: true, message: 'Please input your Icon!' }]}
                             >
-                              <Upload
+                              <Upload  maxCount={1}
+
                                 customRequest={() => { }}
                                 showUploadList={true}
                                 beforeUpload={(file) => {
@@ -757,7 +764,9 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
                         <div>
                           <h4 className={styles.ManageText}>Manage content</h4>
+                          {/* <Form form={editForm} component={false} onFinish={handleSave}> */}
                           <Form form={editForm} component={false}>
+
                             <Table
                               columns={columns}
                               pagination={false}
@@ -812,7 +821,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                           {item.AttachmentFiles.map((attachment: any, attachmentIndex: number) => (
                             <p key={attachmentIndex}><img src={attachment.ServerRelativePath.DecodedUrl} alt={item.Title} className={styles.Imageedit} /></p>
                           ))}
-                          <p className={styles.cardText}>{item.Title}</p>
+                          <p className={styles.cardText}>{item.Title.length > 18 ? item.Title.slice(0, 18) + '...' : item.Title}</p>
                         </div>
                       ))}
                     </div>
@@ -829,7 +838,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
             {/* <Button onClick={() => onClickEditButton(0)}>
               <img src={require("../assets/Edit.svg")} alt="Edit button" />
             </Button> */}
-            <Button onClick={onClickEditButton}>
+            <Button onClick={onClickEditButton} className={styles.Editbutton}>
               <img
                 src={require("../assets/Edit.svg")}
                 alt="Edit button"
@@ -891,7 +900,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
 <Form.Item label="Icon" name="Icon" rules={[{ required: true, message: 'Please input your Icon!' }]}
 >
-  <Upload
+  <Upload maxCount={1}
     customRequest={() => { }}
     showUploadList={true}
     beforeUpload={(file) => {
