@@ -43,6 +43,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   const allowedFileTypes = ['image/svg+xml', 'image/png']; // Define allowed file types
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
+  const [isFormEditing, setIsFormEditing] = useState(false);
 
   // const [selectedSlideData, setSelectedSlideData] = useState<Item[]>([]);
 
@@ -60,6 +61,13 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
       Icon: record.AttachmentFiles,
       // Add more fields here if needed
     });
+    setIsFormEditing(true);
+    form.resetFields();
+    setTitle("");
+    setImage(null);
+    setSelectedFile(null); // Reset selected file state
+    setUrl("");
+
   };
 
 
@@ -67,6 +75,12 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
   const cancel = () => {
     setEditingKey("");
+    setIsFormEditing(false);
+    form.resetFields();
+    setTitle("");
+    setImage(null);
+    setSelectedFile(null); // Reset selected file state
+    setUrl("");
   };
 
   useEffect(() => {
@@ -85,7 +99,12 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
   const onClose = () => {
     setOpen(false);
     setEditingKey(""); // Add this line to reset the editing key
-
+    setIsFormEditing(false);
+    form.resetFields();
+    setTitle("");
+    setImage(null);
+    setSelectedFile(null); // Reset selected file state
+    setUrl("");
   };
 
   type ColumnTypes = any;
@@ -205,6 +224,12 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
     } catch (error) {
       console.error("Error saving item:", error);
     }
+    setIsFormEditing(false);
+    form.resetFields();
+    setTitle("");
+    setImage(null);
+    setSelectedFile(null); // Reset selected file state after saving
+    setUrl("");
   };
 
 
@@ -221,9 +246,10 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
       render: (text: string, record: Item) => {
         const editable = isEditing(record);
+        const truncatedText = text.length > 20 ? text.slice(0, 20) + '...' : text;
 
         return editable ? (
-          <Form.Item name="Title" style={{ margin: 0, width:"134px" }}
+          <Form.Item name="Title" style={{ margin: 0, width:"134px" }} rules={[{ required: true, message: 'Please input your Title!' }]}
           // initialValue={record.Title}
          
            // Set the initial value from the record
@@ -231,7 +257,9 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
             <Input />
           </Form.Item>
         ) : (
-          <span>{record.Title}</span>
+          // <span>{record.Title}</span>
+          <span>{truncatedText}</span>
+
         );
       },
 
@@ -245,13 +273,16 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
 
       render: (text: string, record: Item) => {
         const editable = isEditing(record);
+        const truncatedURL = text.length > 40 ? text.slice(0, 40) + '...' : text;
 
         return editable ? (
-          <Form.Item name="URL" style={{ margin: 0, width:"250px" }}>
+          <Form.Item name="URL" style={{ margin: 0, width:"250px" }}  rules={[{ required: true, message: 'Please input your URL!' }]}>
             <Input defaultValue={editingItem?.URL}/>
           </Form.Item>
         ) : (
-          <span>{record.URL}</span>
+          // <span>{record.URL}</span>
+              <span>{truncatedURL}</span>
+
         );
       },
 
@@ -715,7 +746,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                       </Button>
                       <Drawer title="Add content" onClose={onClose} open={open} width={1000}>
                         <div>
-                          <Form onFinish={handleAddData} form={form}>
+                          <Form onFinish={handleAddData} form={form} disabled={isFormEditing}>
 
 
 
@@ -821,7 +852,7 @@ export default function Carouselbanner(props: ICarouselbannerProps) {
                           {item.AttachmentFiles.map((attachment: any, attachmentIndex: number) => (
                             <p key={attachmentIndex}><img src={attachment.ServerRelativePath.DecodedUrl} alt={item.Title} className={styles.Imageedit} /></p>
                           ))}
-                          <p className={styles.cardText}>{item.Title.length > 18 ? item.Title.slice(0, 18) + '...' : item.Title}</p>
+                          <p className={styles.cardText}>{item.Title.length > 12 ? item.Title.slice(0, 12) + '...' : item.Title}</p>
                         </div>
                       ))}
                     </div>

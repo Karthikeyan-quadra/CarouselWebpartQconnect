@@ -211,16 +211,19 @@ margin-bottom: 13px;
 
 .nextArrow{
   position: absolute;
-  top: 165px;
-  left: 10px;
+  top: 50%;
+  // left: 10px;
+  margin-left: 1rem;
   background: transparent !important;
   z-index: 10;
 }
 .prevArrow{
   position: absolute;
   // left: 747px;
-  left: 1150px;
-  top: 165px;
+  // left: 1130px;
+  // margin-left: 20rem;
+  right: 1rem;
+  top: 50%;
   background: transparent !important;
   z-index: 10;
 }
